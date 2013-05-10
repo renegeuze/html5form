@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset='utf-8'>
+	<title>HTML5form • René Geuze • geuze.name</title>
+	<meta name='description' content='HTML5form is a lots-in-one polyfill for new html5 form attributes and types'>
+	<link rel="stylesheet" media="all" href="jquery-ui-1.8.18.custom.css" >
+	<link rel="stylesheet" media="all" href="jquery-ui-timepicker.css" >
+	<!--[if lt IE 9]>
+	<script src="https://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<style>
+	    del {
+	        text-decoration: strike;
+	    }
+		*:after{
+			font-size:0.8em; color:black; white-space:nowrap;
+		}
+		h1{
+			display:block!important;
+		}
+		h1:after{
+			content: " (score: " attr(data-currentscore) ") ";font-size:0.5em
+		}
+		*[data-relate][data-scoreontrue]:after{
+			content: " (relation with: " attr(data-relate) ") (on true: " attr(data-scoreontrue) ") ";
+		}
+		*[data-relate][data-scoreonfalse]:after{
+			content: " (relation with: " attr(data-relate) ") (on false: " attr(data-scoreontrue) ") ";
+		}
+		*[data-relate][data-scoreonfalse][data-scoreontrue]:after{
+			content: " (relation with: " attr(data-relate) ") (on true: " attr(data-scoreontrue) ") (on false: " attr(data-scoreonfalse) ") ";
+		}
+	</style>
+</head>
+<body>
+	<section>
+		<h1>Html5form fixer</h1>
+		<h3>What is it</h3>
+		<p>
+			html5form.js is an easy to use script that allows you to use a lot of the new html5 form input types and attributes.
+		</p>
+		<p>
+			Take a look in the source code to see what it `polyfills`. And see the small demonstration below for how it works.
+		</p>
+		<h3>Why is it better than the rest</h3>
+		<ul>
+			<li>Just write html5!</li>
+			<li>You can target forms individually</li>
+			<li>It does not add any classes, only a few data-[somethings]</li>
+			<li>Own feature detection</li>
+			<li>It has <del>some</del> feature detection</li>
+			<li>A lot is configurable</li>
+			<li>Callbacks, you can even add your own checks in these</li>
+			<li>It can use jQuery UI</li>
+			<li>It also allows you to target all browsers for consistency</li>
+			<li>Written by a perfectionist, so if you tell him what can be better it will be better!</li>
+		</ul>
+	</section>
+	<section>
+		<h3>Relate?</h3>
+		<p>
+			Relate.js is an additional script that goes even beyond the usability of html5 and is a totally new way of handling form usage.
+		</p>
+		<p>
+			Relate uses html5 data attributes to calculate a score on answered input fields to either hide or show certain elements.
+			<br>
+			This way you can very easily write complex forms with a lot of fields that are dependent on the input of others.
+		</p>
+	</section>
+	<form method=get>
+		<fieldset>
+			<p>
+				<input type='email' name='email' required autofocus placeholder='test' value='a@a.nl'>
+			</p>
+			<p>
+				<input type='date' name='date' required placeholder='placeholder'>
+			</p>
+			<p>
+				<input type='datetime' name='datetime' required>
+			</p>
+			<p>
+				<input type='time' name='time' required>
+			</p>
+			<p>
+				<input type='number' name='number' required>
+			</p>
+			<p>
+				<input data-relate='h1, :checkbox' data-scoreontrue='5' data-scoreonfalse='-4' type='text' name='Normal field' required placeholder='Normal :-)'>
+			</p>
+			<p>
+				<input type='password' name='Password field' required placeholder='password'>
+			</p>
+			<p>
+				<input type='submit' value='submit'>
+			</p>
+			<p>
+				<select name='test'>
+					<option data-relate=''>Test off</option>
+					<option data-relate='h1'>Test on</option>
+				</select>
+			</p>
+			<p>
+				<select name='test2'>
+					<option data-relate='h1'>Test 1 point</option>
+					<option data-relate='h1' data-scoreontrue='2'>Test 2 points</option>
+				</select>
+			</p>
+			<p>
+				<input type=radio data-relate='h1' name='foo' >
+				<input type=radio data-relate='' name='foo' >
+			</p>
+			<p>
+				<input type=checkbox data-relate='h1' name='bar' >
+			</p>
+			<p>
+				<input type='file' name='file'>
+			</p>
+			<input type='email'>
+		</fieldset>
+		<div id='response'></div>
+	</form>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>
+	<script src="./jquery-ui-timepicker.js"></script>
+	<script src="./html5form_3.js"></script>
+	<script src="./html5form.relate.js"></script>
+	<script>
+		$.datepicker.setDefaults({
+			dateFormat: 'd-m-yy'
+		});
+		$.timepicker.setDefaults({
+			timeFormat: 'h:m'
+		});
+
+		$('form').html5form({
+			allBrowsers: true,
+			responseElement: '#response',
+			debug: true,
+			onerror: function(data){
+				$(this).css('background-color', '#FFA2A2').change(function(){
+					$(this).css('background-color', 'white');
+				}).on('keyup', function(){
+					$(this).css('background-color', 'white');
+				});
+				// $('#response').append('<p>' + data.toString() + '</p>');
+				// return false;
+			},
+			onfinish: function(){
+				// Here change datetime content
+				// console.info($('input[name="date"]', this).val());
+				// return false;
+			}
+		}).relate({
+			scoreRequired: 2
+		});
+	</script>
+</body>
+</html>
