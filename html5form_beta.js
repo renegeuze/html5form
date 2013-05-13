@@ -179,10 +179,11 @@
             
             // Search for empty fields & value same as placeholder
             $(':input:visible[required], :input:visible[data-required]', form).each(function() {
-                var name = $(this).attr('name'),
-                    value = $(this).val();
+                var $this = $(this),
+                    name = $this.attr('name'),
+                    value = $this.val();
                 
-                if (value === $(this).attr('placeholder') || value === '') {
+                if (value === $this.attr('placeholder') || value === '') {
                     emptyInput[name] = value;
                     debug('Empty input error');
                     if (opts.onerror(this) === false){
@@ -190,18 +191,19 @@
                     }
                     // Show message
                     if (opts.emptyMessage !== false && opts.responseElement !== null){
-                        addResponse(opts.emptyMessage, $(this));
+                        addResponse(opts.emptyMessage, $this);
                     }
                 }
             });
             
             // Check for pattern
             $(':input:visible[pattern]', form).each(function() {
-                var name, value, pattern;
+                var $this = $(this),
+                    name, value, pattern;
                 
-                name    = $(this).attr('name');
-                value   = $(this).val();
-                pattern = new RegExp($(this).attr('pattern'));
+                name    = $this.attr('name');
+                value   = $this.val();
+                pattern = new RegExp($this.attr('pattern'));
                     
                 if (!value.match(pattern)) {
                     patternError[name] = value;
@@ -212,20 +214,21 @@
                     
                     // Show message
                     if (opts.patternMessage !== false && opts.responseDiv !== null) {
-                        addResponse(opts.patternMessage, $(this));
+                        addResponse(opts.patternMessage, $this);
                     }
                 }
             });
             
             // check email type inputs with regular expression
-            $(':input:visible[type="email"]', form).each(function(index, element) {
-                var name, value;
+            $(':input:visible[type="email"]', form).each(function(index) {
+                var $this = $(this),
+                    name, value;
                 
-                name  = $(this).attr('name');
-                value = $(this).val();
+                name  = $this.attr('name');
+                value = $this.val();
                 
                 // If empty, skip
-                if (value === '' || value === element.defaultValue) {
+                if (value === '' || value === this.defaultValue) {
                     return true;
                 }
                 
@@ -237,7 +240,7 @@
                     }
                     // Show message
                     if (opts.emailMessage !== false && opts.responseElement !== null) {
-                        addResponse(opts.emailMessage, $(this));
+                        addResponse(opts.emailMessage, $this);
                     }
                 }
             });
@@ -254,47 +257,42 @@
         
         // Send form
         function sendForm(form) {
-            var input = $(':input:visible:not(:button, :submit, :radio, select)', form),
+            var $form = $(form),
+                input = $(':input:visible:not(:button, :submit, :radio, select)', form),
                 url = opts.action,
                 method = opts.method,
                 formData;
             
-            if(url === false) {
-                url = $(form).attr('action') || './';
+            if (url === false) {
+                url = $form.attr('action') || './';
             }
-            if(method === false) {
-                method = $(form).attr('method') || 'get';
+            if (method === false) {
+                method = $form.attr('method') || 'get';
             }
             
             debug('Sending form');
             
             // Clear all empty value fields before Submit 
             $(input).each(function() {
-                if ($(this).val() === $(this).attr('placeholder')) {
-                    $(this).val($(this).get(0).defaultValue);
+                var $this = $(this);
+                if ($this.val() === $this.attr('placeholder')) {
+                    $this.val(this.defaultValue);
                 }
             });
             
             // Submit data by Ajax
             if (opts.async === true) {
-                formData = $(form).serialize();
-                if (url.match(/\?/)) {
-                    formData = '&' + formData;
-                } else {
-                    formData = '?' + formData;
-                }
+                formData = $form.serialize();
                 $.ajax({
-                    url  : action + formData,
+                    url  : action,
                     type : method,
-                    // data : formData,
-                    success : function(data){
+                    data : formData,
+                    success : function(data) {
                         opts.onajaxsuccess(this);
                         opts.ajaxready(data);
                         debug('Success sending');
                         //Reset form
-                        $(':input', form).each(function() {
-                            $(this).val($(this).get(0).defaultValue);
-                        });
+                        form.reset();
                     },
                     error: function() {
                         opts.onajaxerror(this);
@@ -302,7 +300,7 @@
                     }
                 });
             } else {
-                $(form).submit();
+                $form.submit();
             }
         }
         
@@ -371,24 +369,24 @@
         
         // Replaces special type input fields with normal ones for good enough reasons
         function replaceType(type, scope) {
-            var clone, self;
+            var clone;
             $('[type="' + type + '"]', scope).each(function() {
-                var self = $(this).get(0);
+                var $this = $(this);
                 try {
                     // Bypass jQuery to set type on browsers that allow changing it
-                   self.type = 'text';
-                   $(this).attr('data-' + type + 'type', type + 'type');
+                   this.type = 'text';
+                   $this.attr('data-' + type + 'type', type + 'type');
                 } catch(err) {
                     debug(err + ' :: Fixing it anyway');
                     clone = document.createElement('input');
-                    $(clone).data($(this).data())
+                    $(clone).data($this.data())
                         .attr('data-' + type + 'type', type + 'type')
                         .attr('type', 'text')
                         .attr('placeholder', $(this).attr('placeholder'))
                         .attr('name', $(this).attr('name'))
                         .attr('value', $(this).attr('value'));
                         console.info(clone);
-                    $(this).replaceWith(clone);
+                    $this.replaceWith(clone);
                 }
             });
         }
@@ -396,7 +394,8 @@
         // Loop over all forms requested
         return this.each(function() {
             // Private properties
-            var form = $(this),
+            var $this = $(this),
+                 form = $this,// REMOVE WHEN CHECKED
                 result = false;
             
             // Callback initialize
@@ -405,7 +404,7 @@
             
             // Label hiding (if required)
             if (opts.labels === 'hide') {
-                $(this).find('label').hide();
+                $('label', this).hide();
             }
             
             
@@ -413,7 +412,8 @@
             if (fixThisOrNot('maxLength') === true) {
                 (function(form) {
                     $('textarea', form).on('keydown', function(event) {
-                        var maxlength = ($(this).attr('maxlength')) * 1,
+                        var $this = $(this),
+                            maxlength = ($this.attr('maxlength')) * 1,
                             keycode = event.which || event.charCode || event.keyCode;
                         
                         if (keycode === 37 || keycode === 39 || keycode === 8 || keycode === 46) {
@@ -441,11 +441,11 @@
                             }
                         }, 0);
                     });
-                })(form);
+                })($this);
             }
             if (fixThisOrNot('number') === true) {
                 // Number type
-                $('input[type="number"]', form).on('keydown', function(event) {
+                $('input[type="number"]', this).on('keydown', function(event) {
                     var keycode = event.which || event.charCode || event.keyCode,
                         shift   = event.shiftKey || false,
                         ctrl    = event.ctrlKey  || false,
@@ -480,9 +480,10 @@
                         return false;
                     }
                 }).on('keyup', function() {
-                    var value = $(this).val(),
-                        min = ($(this).attr('min')) ? ($(this).attr('min')) * 1 : false,
-                        max = ($(this).attr('max')) ? ($(this).attr('max')) * 1 : false;
+                    var $this = $(this),
+                        value = $this.val(),
+                        min = ($this.attr('min')) ? ($this.attr('min')) * 1 : false,
+                        max = ($this.attr('max')) ? ($this.attr('max')) * 1 : false;
                     
                     // Return if empty
                     if (value === '') {
@@ -492,66 +493,68 @@
                     // Check for invalid chars(somehow)
                     if (value.match(/[^\-\.0-9]+/)) {
                         value = value.replace(/[^\-\.0-9]+/, '');
-                        $(this).val(value);
+                        $this.val(value);
                     }
                     
                     // Check for min
-                    if (min !== false && ($(this).val()) * 1 < min) {
-                        $(this).val(min);
+                    if (min !== false && ($this.val()) * 1 < min) {
+                        $this.val(min);
                     }
                     
                     // Check for max
-                    if (max !== false && ($(this).val()) * 1 > max) {
-                        $(this).val(max);
+                    if (max !== false && ($this.val()) * 1 > max) {
+                        $this.val(max);
                     }
                 }).on('change', function() {
-                    var value = $(this).val();
+                    var $this = $(this),
+                        value = $this.val();
                     debug('change');
                     // Check for invalid chars(somehow)
                     if (value.match(/[^\-\.0-9]+/)) {
                         value.replace(/[^\-\.0-9]+/g, '');
-                        $(this).val(value);
+                        $this.val(value);
                     }
                 }).on('paste', function() {
-                    var $self = $(this);
+                    var $this = $(this);
                     setTimeout(function() {
-                        $self.trigger('change');
+                        $this.trigger('change');
                     }, 100);
                 });
             }
             
             // Progressive enhancement on time picker
             if (fixThisOrNot('time') === true && $.ui && $.ui.timepicker) {
-                replaceType('time', form);
-                $('input[type="time"], input[data-timetype]', form).timepicker({});
+                replaceType('time', this);
+                $('input[type="time"], input[data-timetype]', this).timepicker({});
             }
             // Progressive enhancement on datetime picker
             if (fixThisOrNot('datetime') === true && $.ui && $.ui.datepicker && $.ui.timepicker) {
-                replaceType('datetime', form);
-                $('input[type="datetime"], input[data-datetimetype]', form).datetimepicker();
+                replaceType('datetime', this);
+                $('input[type="datetime"], input[data-datetimetype]', this).datetimepicker();
             }
             // Progressive enhancement on date picker
             if (fixThisOrNot('date') === true && $.ui && $.ui.datepicker) {
-                replaceType('date', form);
-                $('input[type="date"], input[data-datetype]', form).datepicker();
+                replaceType('date', this);
+                $('input[type="date"], input[data-datetype]', this).datepicker();
             }
             
             // Some things are just different when all browsers have to be checked :-)
             if (opts.allBrowsers === true) {
                 // Prevent default validation methods
-                if (!$(this).attr('novalidate')) {
-                    $(this).attr('novalidate', 'novalidate').attr('data-forced-html5form-validate', 'validate');
+                if (!$this.attr('novalidate')) {
+                    $this.attr('novalidate', 'novalidate').attr('data-forced-html5form-validate', 'validate');
                 }
                 // Always prevent default required
-                $(':input[required]', form).attr('data-required', 'required').removeAttr('required');
+                $(':input[required]', this).attr('data-required', 'required').removeAttr('required');
             }
             
             // Placeholder - after type replacers
             if (fixThisOrNot('placeholder') === true) {
                 debug('fixing placeholder');
-                $(':input[placeholder]:not(:button, :submit)', form).each(function() {
-                    $(this).attr('data-startcolor', $(this).css('color'));
-                    checkPlaceholder($(this), 'start');
+                $(':input[placeholder]:not(:button, :submit)', this).each(function() {
+                    var $this = $(this);
+                    $this.attr('data-startcolor', $this.css('color'));
+                    checkPlaceholder($this, 'start');
                 }).on('focus', function() {
                     checkPlaceholder($(this), 'focus');
                 }).on('blur', function() {
@@ -559,36 +562,37 @@
                 });
             }
             
+            // Find first autofocus to activate - must stay below placeholder fixer
+            if (fixThisOrNot('autofocus') === true && document.activeElement && document.activeElement.nodeName.toLowerCase() === 'body') {
+                // Timeout as IE8 fix
+                setTimeout(function() {
+                    $(':input[autofocus]').first().val('').focus().val(autoFocusHelper);
+                }, 100);
+            }
+            
             // Normal submit functionality :-)
             form.submit(function(event) {
-                if (tmp.finished === true) {
+                var $this = $(this),
+                    data = $this.data();
+                if (data.finished === true) {
                     return true;
                 }
                 event.preventDefault();
                 opts.onsubmit(this);
-                if ($(this).attr('novalidate') && !$(this).attr('data-forced-html5form-validate')) {
+                if ($this.attr('novalidate') && !$this.attr('data-forced-html5form-validate')) {
                     result = true;
                 } else {
-                    result = testForm(form);
+                    result = testForm(this);
                 }
                 if (result === true) {
-                    tmp.finished = true;
-                    if (opts.onfinish(form) !== false ) {
-                        sendForm(form);
+                    data.finished = true;
+                    if (opts.onfinish(this) !== false ) {
+                        sendForm(this);
                     }
-                    tmp.finished = false;
+                    data.finished = false;
                 }
                 return false;
             });
         });
-        
-        // Find first autofocus to activate - must stay below placeholder fixer, which is in the loop
-        /**
-         * TODO Make this function do something :p lol
-         * (it's below the return in case you ask why)
-         */
-        if (fixThisOrNot('autofocus') === true && $(document.activeElement).is('body')) {
-            $(':input[autofocus]').first().val('').focus().val(autoFocusHelper);
-        }
     };
 })(jQuery);
